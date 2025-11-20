@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { CopyButton } from "@/components/CopyButton";
 import { getWorkflowById, getWorkflowDetail, getAllWorkflows } from "@/lib/workflows";
 
 interface WorkflowPageProps {
@@ -67,6 +69,7 @@ export default async function WorkflowPage({ params }: WorkflowPageProps) {
             <Link href="/workflows" className="text-sm text-muted-foreground hover:text-foreground">
               浏览全部
             </Link>
+            <ThemeToggle />
           </nav>
         </div>
       </header>
@@ -128,9 +131,7 @@ export default async function WorkflowPage({ params }: WorkflowPageProps) {
                   {JSON.stringify(workflowDetail.workflow, null, 2)}
                 </pre>
                 <div className="flex gap-2 mt-4">
-                  <Button variant="outline">
-                    复制 JSON
-                  </Button>
+                  <CopyButton text={JSON.stringify(workflowDetail.workflow, null, 2)} />
                   <Link href={workflowDetail.urlN8n} target="_blank" rel="noopener noreferrer">
                     <Button variant="secondary">
                       在 n8n.io 查看

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { WorkflowCard } from "@/components/WorkflowCard";
 import { SearchBar } from "@/components/SearchBar";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { getAllWorkflows, getAllCategories, getFeaturedWorkflows, getRecentWorkflows } from "@/lib/workflows";
 
 export default async function Home() {
@@ -24,6 +25,7 @@ export default async function Home() {
             <Link href="/workflows" className="text-sm text-muted-foreground hover:text-foreground">
               浏览全部
             </Link>
+            <ThemeToggle />
           </nav>
         </div>
       </header>

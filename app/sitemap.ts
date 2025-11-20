@@ -26,7 +26,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // 工作流详情页
   const workflowPages = workflows.map((workflow) => ({
     url: `${baseUrl}/workflows/${workflow.id}`,
-    lastModified: new Date(workflow.updatedAt || workflow.createdAt || new Date()),
+    lastModified: new Date(),
     changeFrequency: 'weekly' as const,
     priority: 0.8,
   }))
