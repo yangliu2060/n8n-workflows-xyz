@@ -24,6 +24,7 @@ export interface WorkflowMeta {
 
 // 工作流节点
 export interface WorkflowNode {
+  id: string;
   name: string;
   type: string;
   typeVersion?: number;

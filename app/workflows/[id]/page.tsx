@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { CopyButton } from "@/components/CopyButton";
+import { WorkflowPreview } from "@/components/WorkflowPreview";
 import { getWorkflowById, getWorkflowDetail, getAllWorkflows } from "@/lib/workflows";
 
 interface WorkflowPageProps {
@@ -117,6 +118,19 @@ export default async function WorkflowPage({ params }: WorkflowPageProps) {
                 ))}
               </div>
             </div>
+
+            {/* Workflow Preview */}
+            <Card className="mb-8">
+              <CardHeader>
+                <CardTitle className="text-lg">工作流预览</CardTitle>
+                <CardDescription>
+                  可视化展示节点连接关系，支持缩放和平移
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <WorkflowPreview workflow={workflowDetail.workflow} />
+              </CardContent>
+            </Card>
 
             {/* JSON Export */}
             <Card className="mt-8">
