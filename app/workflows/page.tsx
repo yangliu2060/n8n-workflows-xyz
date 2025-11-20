@@ -13,6 +13,9 @@ export default async function WorkflowsPage() {
   const categories = await getAllCategories();
   const integrations = await getAllIntegrations();
 
+  // 暂时只显示前100个工作流（后续添加分页）
+  const displayWorkflows = workflows.slice(0, 100);
+
   return (
     <div className="min-h-screen">
       {/* Header */}
@@ -34,7 +37,7 @@ export default async function WorkflowsPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">全部工作流</h1>
           <p className="text-muted-foreground">
-            共 {workflows.length} 个工作流
+            共 {workflows.length.toLocaleString()} 个工作流
           </p>
         </div>
 
@@ -52,11 +55,11 @@ export default async function WorkflowsPage() {
               {/* Categories */}
               <div>
                 <h3 className="font-medium mb-2">分类</h3>
-                <div className="space-y-1">
+                <div className="space-y-1 max-h-64 overflow-y-auto">
                   {categories.map((category) => (
                     <Link
                       key={category.slug}
-                      href={`/categories/${category.slug}`}
+                      href={`/workflows?category=${encodeURIComponent(category.name)}`}
                       className="block text-sm text-muted-foreground hover:text-foreground py-1"
                     >
                       {category.name} ({category.count})
@@ -67,14 +70,14 @@ export default async function WorkflowsPage() {
 
               {/* Integrations */}
               <div>
-                <h3 className="font-medium mb-2">集成</h3>
-                <div className="space-y-1">
-                  {integrations.slice(0, 10).map((integration) => (
+                <h3 className="font-medium mb-2">节点类型</h3>
+                <div className="space-y-1 max-h-64 overflow-y-auto">
+                  {integrations.slice(0, 20).map((integration) => (
                     <div
                       key={integration.name}
                       className="text-sm text-muted-foreground py-1"
                     >
-                      {integration.name} ({integration.count})
+                      {integration.displayName} ({integration.count})
                     </div>
                   ))}
                 </div>
@@ -84,8 +87,11 @@ export default async function WorkflowsPage() {
 
           {/* Workflow Grid */}
           <div className="flex-1">
+            <p className="text-sm text-muted-foreground mb-4">
+              显示前 {displayWorkflows.length} 个工作流
+            </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-              {workflows.map((workflow) => (
+              {displayWorkflows.map((workflow) => (
                 <WorkflowCard key={workflow.id} workflow={workflow} />
               ))}
             </div>

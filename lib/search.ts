@@ -6,7 +6,7 @@ const fuseOptions = {
   keys: [
     { name: "name", weight: 0.4 },
     { name: "description", weight: 0.3 },
-    { name: "integrations", weight: 0.2 },
+    { name: "tags", weight: 0.2 },
     { name: "categories", weight: 0.1 },
   ],
   threshold: 0.3, // 模糊匹配容差
@@ -50,12 +50,12 @@ export function filterByCategory(
   }
 
   return workflows.filter((workflow) =>
-    workflow.categories.includes(category)
+    workflow.categories.some(c => c.toLowerCase() === category.toLowerCase())
   );
 }
 
 /**
- * 按集成筛选工作流
+ * 按节点类型筛选工作流
  */
 export function filterByIntegration(
   workflows: Workflow[],
@@ -66,20 +66,6 @@ export function filterByIntegration(
   }
 
   return workflows.filter((workflow) =>
-    workflow.integrations.includes(integration)
+    workflow.tags?.includes(integration)
   );
-}
-
-/**
- * 按难度筛选工作流
- */
-export function filterByDifficulty(
-  workflows: Workflow[],
-  difficulty: string
-): Workflow[] {
-  if (!difficulty) {
-    return workflows;
-  }
-
-  return workflows.filter((workflow) => workflow.difficulty === difficulty);
 }

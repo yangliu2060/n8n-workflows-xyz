@@ -11,97 +11,132 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-A web application displaying n8n automation workflows from n8n.io with categorization and search functionality.
+A web application displaying ~6,000 n8n automation workflows with categorization and search functionality.
 
 - **Framework**: Next.js 15 (App Router) + TypeScript
 - **Styling**: Tailwind CSS + shadcn/ui
-- **Search**: Fuse.js (client-side)
-- **Data Scraping**: Playwright
+- **Search**: Fuse.js (client-side fuzzy search)
 - **Deployment**: Vercel
 
 ## Development Commands
 
 ```bash
-npm run dev          # Start dev server (http://localhost:3000)
-npm run build        # Build for production
+npm run dev          # Start dev server with Turbopack (http://localhost:3000)
+npm run build        # Build for production (generates ~6000 static pages)
 npm run lint         # Lint code
-npm run fetch-data   # Fetch workflow data from n8n.io
+npm run fetch-data   # Fetch workflow data (currently uses local data)
 ```
 
 ## Architecture
 
+### Data Structure
+
+The project uses a split data architecture for performance:
+
+```
+data/
+├── workflows-meta.json     # Metadata for all workflows (11.8MB) - used for lists/search
+└── workflows/              # Individual workflow JSON files - used for detail pages
+    ├── 10666.json
+    ├── 10665.json
+    └── ... (5971 files)
+```
+
+This allows:
+- Fast list page loading (only metadata)
+- On-demand loading of full workflow definitions (detail pages)
+
 ### Data Flow
 
 ```
-n8n.io → scripts/fetch-workflows.ts → data/workflows.json → Next.js Pages
+元数据 (workflows-meta.json) → 列表页/搜索
+完整工作流 (workflows/*.json) → 详情页 JSON 导出
 ```
 
 ### Key Files
 
-- `app/page.tsx` - Homepage with hero, search, featured workflows
-- `app/workflows/page.tsx` - Workflow list with filters
-- `app/workflows/[id]/page.tsx` - Workflow detail + JSON export
-- `components/WorkflowCard.tsx` - Card component for grid display
-- `components/SearchBar.tsx` - Client-side search component
-- `lib/workflows.ts` - Data loading and filtering functions
+**Pages:**
+- `app/page.tsx` - Homepage with hero, search, featured/recent workflows
+- `app/workflows/page.tsx` - Workflow list with category/integration filters
+- `app/workflows/[id]/page.tsx` - Workflow detail with JSON export and author info
+
+**Components:**
+- `components/WorkflowCard.tsx` - Card displaying workflow with node count, author, categories
+- `components/SearchBar.tsx` - Client-side search with navigation
+
+**Data Layer:**
+- `lib/workflows.ts` - Data loading functions (`getAllWorkflows`, `getWorkflowDetail`, etc.)
 - `lib/search.ts` - Fuse.js search configuration
-- `types/workflow.ts` - TypeScript interfaces for Workflow data
-- `scripts/fetch-workflows.ts` - Playwright script to scrape n8n.io
+- `types/workflow.ts` - TypeScript interfaces
 
 ### Data Model
 
 ```typescript
-interface Workflow {
+// Metadata (for lists)
+interface WorkflowMeta {
   id: string;
   name: string;
   description: string;
-  nodes: WorkflowNode[];
-  connections: Record<string, Record<string, WorkflowConnection[][]>>;
-  categories: string[];      // e.g., ["automation", "productivity"]
-  integrations: string[];    // e.g., ["Slack", "Gmail"]
-  difficulty?: "beginner" | "intermediate" | "advanced";
-  metadata?: { views?: number; downloads?: number; author?: string; featured?: boolean };
+  categories: string[];        // e.g., ["AI", "Marketing"]
+  tags: string[];              // Node types: ["n8n-nodes-base.gmail", ...]
+  author: string;
+  authorUsername: string;
+  authorAvatar?: string;
+  urlN8n: string;              // Link to n8n.io
+  nodeTypes: Record<string, { count: number }>;
+}
+
+// Full workflow (for detail page)
+interface WorkflowDetail extends WorkflowMeta {
+  workflow: {
+    nodes: WorkflowNode[];
+    connections: Record<string, Record<string, WorkflowConnection[][]>>;
+  };
 }
 ```
 
 ## Key Implementation Details
 
-### Search (lib/search.ts)
+### Loading Data
 
-Uses Fuse.js for fuzzy search:
 ```typescript
-const fuse = new Fuse(workflows, {
-  keys: ['name', 'description', 'integrations', 'categories'],
-  threshold: 0.3,
-  ignoreLocation: true
-});
+// List pages - use metadata only
+const workflows = await getAllWorkflows();
+
+// Detail page - load full workflow definition
+const workflowDetail = await getWorkflowDetail(id);
 ```
 
-### Responsive Grid
+### Search Configuration (lib/search.ts)
 
-- Mobile: 1 column
-- Tablet (sm): 2 columns
-- Desktop (lg): 3-4 columns
+```typescript
+const fuseOptions = {
+  keys: [
+    { name: "name", weight: 0.4 },
+    { name: "description", weight: 0.3 },
+    { name: "tags", weight: 0.2 },
+    { name: "categories", weight: 0.1 },
+  ],
+  threshold: 0.3,
+  ignoreLocation: true,
+};
+```
+
+### External Images
+
+Configured in `next.config.ts` for author avatars from gravatar.com.
 
 ### SEO
 
-- Static generation for all workflow pages
+- Static generation for all workflow pages via `generateStaticParams`
 - Dynamic sitemap at `app/sitemap.ts`
 - robots.txt at `app/robots.ts`
-- Meta tags in `app/layout.tsx`
-
-## Data Fetching
-
-The scraper script (`scripts/fetch-workflows.ts`) uses Playwright to:
-1. Navigate to n8n.io/workflows
-2. Extract workflow data
-3. Save to `data/workflows.json`
-
-Currently uses mock data. To fetch real data, analyze n8n.io network requests for API endpoints.
 
 ## Deployment
 
-Configured for Vercel with `vercel.json`. Push to GitHub and import to Vercel for automatic deployment.
+Configured for Vercel with `vercel.json`.
+
+**Note**: Production build generates static pages for all ~6000 workflows, which takes significant time.
 
 Environment variables:
 - `NEXT_PUBLIC_SITE_URL` - Site URL for sitemap (default: https://n8nworkflows.xyz)
